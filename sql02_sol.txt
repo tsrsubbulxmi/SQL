@@ -8,6 +8,35 @@ mysql> select sum(pi.weight) from plant pl left outer join picked pi on pl.plant
 +----------------+
 1 row in set (0.00 sec)
 
+========================================(2)=================================================//
+
+update picked set locationfk=(select locationid from location where name='North'),plantfk=(select plantid from plant where name='Tomato') where gardenerfk=(select gardenerid from garden where name='Erin);
+select * from picked;
+
+========================================(3)=================================================
+
+mysql> alter table gardener add column exper int(30);
+Query OK, 0 rows affected, 1 warning (3.87 sec)
+Records: 0  Duplicates: 0  Warnings: 1
+
+mysql> alter table gardener drop column exper;
+Query OK, 0 rows affected (3.17 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> alter table gardener add column exper varchar(30);
+Query OK, 0 rows affected (2.80 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+========================================(4)=================================================
+
+mysql> select p.name from planted pl left outer join plant p on p.plantid=pl.plantfk where pl.seeds<20 and month(date1)=4 and day(date1)=14;
++--------+
+| name   |
++--------+
+| Carrot |
++--------+
+1 row in set (0.00 sec)
+
 ========================================(5)=================================================
 
 mysql> select sunlight,water from plant where lower(name) like "c%" or lower(name) like "r%";
@@ -19,16 +48,6 @@ mysql> select sunlight,water from plant where lower(name) like "c%" or lower(nam
 |     0.28 |  0.84 |
 +----------+-------+
 3 rows in set (0.00 sec)
-
-========================================(4)=================================================
-
-mysql> select p.name from planted pl left outer join plant p on p.plantid=pl.plantfk where pl.seeds<20 and month(date1)=4 and day(date1)=14;
-+--------+
-| name   |
-+--------+
-| Carrot |
-+--------+
-1 row in set (0.00 sec)
 
 ========================================(6)=================================================
 
@@ -45,6 +64,32 @@ mysql> select p.name,sum(pl.seeds) from planted pl left outer join plant p on p.
 +---------+---------------+
 6 rows in set (0.00 sec)
 
+========================================(7)=================================================
+
+mysql> select coalesce((sum(pi.amount)/sum(p.seeds)),0) from planted p left outer join picked pi on p.plantfk=pi.plantfk group by p.plantfk;
++-------------------------------------------+
+| coalesce((sum(pi.amount)/sum(p.seeds)),0) |
++-------------------------------------------+
+|                                    0.9524 |
+|                                    0.0000 |
+|                                    2.1875 |
+|                                    0.3947 |
+|                                    0.7667 |
+|                                    0.0000 |
++-------------------------------------------+
+6 rows in set (0.06 sec)
+
+========================================(8)=================================================
+
+mysql> select g.name,p.name,pi.date1,pi.amount from picked pi left outer join plant p on p.plantid=pi.plantfk left outer join location l on l.locationid=pi.locationfk left outer join gardener g on g.gardenerid=pi.gardenerfk where l.name='East' and g.name='Tim';
++------+--------+------------+--------+
+| name | name   | date1      | amount |
++------+--------+------------+--------+
+| Tim  | Carrot | 2012-08-18 |     28 |
+| Tim  | Radish | 2012-07-16 |     23 |
++------+--------+------------+--------+
+2 rows in set (0.03 sec)
+
 ========================================(9)=================================================
 
 mysql> select g.name from planted pl left outer join picked p on p.gardenerfk=pl.gardenerfk left outer join gardener g on g.gardenerid=p.gardenerfk
@@ -57,3 +102,17 @@ mysql> select g.name from planted pl left outer join picked p on p.gardenerfk=pl
 | Erin   |
 +--------+
 3 rows in set (0.00 sec)
+
+
+========================================(10)=================================================
+
+mysql> create view plants_picked as select p.name from plant p left outer join picked pi on p.plantid=pi.plantfk left outer join location l on pi.locationfk=l.locationid where l.name!='West' and month(pi.date1)!=8;
+Query OK, 0 rows affected (0.13 sec)
+
+mysql> select * from plants_picked;
++--------+
+| name   |
++--------+
+| Radish |
++--------+
+1 row in set (0.14 sec)

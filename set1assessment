@@ -41,9 +41,30 @@ mysql> select * from publish p join author a on a.publish_id=p.publish_id where 
 4)
 Fetch authors who have incorrect author_country for same author_city. Display correct author_country along with all author_information
 
+mysql> select a.author_id,a.author_name,a.author_country,a.author_city from author a join author b on a.author_city=b.author_city where a.author_country<>b.author_country;
++-----------+-------------+----------------+-------------+
+| author_id | author_name | author_country | author_city |
++-----------+-------------+----------------+-------------+
+| AUT008    | Andrew Jeff | GERMANY        | Berlin      |
+| AUT007    | E. Howard   | EUROPE         | Berlin      |
++-----------+-------------+----------------+-------------+
+2 rows in set (0.06 sec)
+
 
 5)
 Fetch authors who do not have publisher from their country
+
+mysql> select author_id,author_name,author_country,author_city from (select author_id,author_name,author_country, case when publish_city='BERLIN' and author_country not in(GERMANY','EUROPE') then 'true' when publish_city='NEW JERSY' and author_country!='USA' then 'true'  when publish_city='LONDON' and author_country not in('UK','EUROPE') then 'true' when author_city='CANADA' and publish_city!='CANADA' then 'true'end as publish_city,author_city, a.publish_id,publish_name from author a join publish p on a.publish_id=p.publish_id)as temp where publish_city is not null;
++-----------+----------------------+----------------+-------------+
+| author_id | author_name          | author_country | author_city |
++-----------+----------------------+----------------+-------------+
+| AUT001    | William Norton       | UK             | Cambridge   |
+| AUT003    | John Betjeman Hunter | RUSSIA         | Moscow      |
+| AUT004    | John Betjeman Hunter | CANADA         | Toronto     |
+| AUT005    | S.B.Swaminathan      | INDIA          | Delhi       |
+| AUT009    | Drek Tailor          | Australia      | Melbourne   |
++-----------+----------------------+----------------+-------------+
+5 rows in set (0.00 sec)
 
 6)
 Fetch author details if first character of publisher name is same as author_name
@@ -120,6 +141,15 @@ mysql> select author_id,author_name,author_country,author_city,publish_id,publis
 11)
 Fetch count of authors belong to same continent(eg. Berlin -> Europe)
 
-
+mysql> select author_continent,count(*) from  (select AUTHOR_ID,AUTHOR_NAME,case when AUTHOR_country='USA' then 'North America' when author_country='UK' then 'Europe' when author_country='CANADA' then 'North America' when author_country='INDIA' then 'Asia' when author_country='GERMANY' then 'Europe' when author_country='RUSSIA' then 'Asia' else author_country END AS AUTHOR_CONTINENT,AUTHOR_CITY,PUBLISH_ID FROM AUTHOR)continent group by author_continent;
++------------------+----------+
+| AUTHOR_CONTINENT | count(*) |
++------------------+----------+
+| Europe           |        4 |
+| North America    |        3 |
+| Asia             |        2 |
+| Australia        |        1 |
++------------------+----------+
+4 rows in set (0.00 sec)
 
 
